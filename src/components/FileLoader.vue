@@ -1,7 +1,16 @@
 <template>
   <div>
     <h2>{{ msg }}</h2>
-    <input type="file" v-on:change="upload($event.target.files)" accept="image/*">
+    <!-- <input type="file" v-on:change="upload($event.target.files)" accept="image/*"> -->
+    <div id="drop-area">
+        <form class="my-form">
+            <p>Upload multiple files with the file dialog or by dragging and dropping images onto the dashed region</p>
+            <input type="file" id="fileElem" v-on:change="upload($event.target.files)" multiple accept="image/*">
+            <label class="button" for="fileElem" >Select some files</label>
+            <progress id="progress-bar" max=100 value=0></progress>
+            <div id="gallery"></div>
+        </form>
+    </div>
   </div>
 </template>
 
@@ -25,7 +34,75 @@ export default {
       return `https://api.cloudinary.com/v1_1/${this.cloudinary.cloudName}/image/upload`
     }
   },
+  created: function () {
+    const dropArea = document.getElementById('drop-area')
+    const progressBar = document.getElementById('progress-bar')
+    let filesToDo = 0
+    let filesDone = 0
+
+    ;['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+      dropArea.addEventListener(eventName, highlight, false)
+    })
+    ;['dragenter', 'dragover'].forEach(eventName => {
+      dropArea.addEventListener(eventName, highlight, false)
+    })
+    ;['dragleave', 'drop'].forEach(eventName => {
+      dropArea.addEventListener(eventName, unhighlight, false)
+    })
+
+    dropArea.addEventListener('drop', handleDrop, false)
+  },
   methods: {
+    // デフォルトのイベントをキャンセル
+    preventDefaults: function (e) {
+      e.preventDefault()
+      e.stopPropagation()
+    },
+    // ドラッグオーバー時のハイライト
+    highlight: function (e) {
+      console.log('どらっぐおーばー！')
+      dropArea.classList.add('highlight')
+    },
+    // ドラッグアウト時はハイライトしない
+    unhighlight: function (e) {
+      console.log('どらっぐあうと！')
+      dropArea.classList.remove('highlight')
+    },
+    // ファイルドロップ時の処理
+    handleDrop: function (e) {
+      console.log('どろっぷ！')
+      let dt = e.dataTransfer
+      let files = dt.files
+
+      handleFiles(files)
+    },
+    // ファイルドロップ後の処理
+    handleFiles: function (files) {
+      files = [...files]
+      initializeProgress(files.length)
+      files.forEach(uploadFile)
+      files.forEach(previewFile)
+    },
+    // プレビュー
+    previewFile: function (files) {
+      let reader = new FileReader()
+      reader.readAsDataURL(file)
+      reader.onloadend = function () {
+        let img = document.createElement('img')
+        img.src = reader.result
+        document.getElementById('gallery').appendChild(img)
+      }
+    },
+    // プログレスバー
+    initializeProgress: function (numfiles) {
+      progressBar.value = 0
+      filesDone = 0
+      filesToDo = numfiles
+    },
+    progressDone: function () {
+      filesDone++
+      progressBar.value = filesDone / filesToDo * 100
+    },
     // アップロード時の処理
     upload: function (file) {
       const formData = new FormData()
@@ -53,7 +130,7 @@ export default {
     border-radius: 20px;
     width: 480px;
     font-family: sans-serif;
-    margin: 100px auto;
+    margin: 0 auto;
     padding: 20px;
 }
 #drop-area.highlight {
