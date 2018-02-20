@@ -34,23 +34,22 @@ export default {
       return `https://api.cloudinary.com/v1_1/${this.cloudinary.cloudName}/image/upload`
     }
   },
-  created: function () {
+  mounted () {
+    let vm = this
     const dropArea = document.getElementById('drop-area')
     const progressBar = document.getElementById('progress-bar')
     let filesToDo = 0
     let filesDone = 0
 
     ;['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
-      dropArea.addEventListener(eventName, highlight, false)
+      dropArea.addEventListener(eventName, vm.preventDefaults, false)
     })
     ;['dragenter', 'dragover'].forEach(eventName => {
-      dropArea.addEventListener(eventName, highlight, false)
+      dropArea.addEventListener(eventName, vm.highlight, false)
     })
     ;['dragleave', 'drop'].forEach(eventName => {
-      dropArea.addEventListener(eventName, unhighlight, false)
+      dropArea.addEventListener(eventName, vm.unhighlight, false)
     })
-
-    dropArea.addEventListener('drop', handleDrop, false)
   },
   methods: {
     // デフォルトのイベントをキャンセル
@@ -61,12 +60,12 @@ export default {
     // ドラッグオーバー時のハイライト
     highlight: function (e) {
       console.log('どらっぐおーばー！')
-      dropArea.classList.add('highlight')
+      this.dropArea.classList.add('highlight')
     },
     // ドラッグアウト時はハイライトしない
     unhighlight: function (e) {
       console.log('どらっぐあうと！')
-      dropArea.classList.remove('highlight')
+      this.dropArea.classList.remove('highlight')
     },
     // ファイルドロップ時の処理
     handleDrop: function (e) {
@@ -74,19 +73,19 @@ export default {
       let dt = e.dataTransfer
       let files = dt.files
 
-      handleFiles(files)
+      this.handleFiles(files)
     },
     // ファイルドロップ後の処理
     handleFiles: function (files) {
       files = [...files]
-      initializeProgress(files.length)
-      files.forEach(uploadFile)
-      files.forEach(previewFile)
+      this.initializeProgress(files.length)
+      files.forEach(this.uploadFile)
+      files.forEach(this.previewFile)
     },
     // プレビュー
     previewFile: function (files) {
       let reader = new FileReader()
-      reader.readAsDataURL(file)
+      reader.readAsDataURL(files)
       reader.onloadend = function () {
         let img = document.createElement('img')
         img.src = reader.result
@@ -95,27 +94,29 @@ export default {
     },
     // プログレスバー
     initializeProgress: function (numfiles) {
-      progressBar.value = 0
-      filesDone = 0
-      filesToDo = numfiles
+      this.progressBar.value = 0
+      this.filesDone = 0
+      this.filesToDo = numfiles
     },
     progressDone: function () {
-      filesDone++
-      progressBar.value = filesDone / filesToDo * 100
+      this.filesDone++
+      this.progressBar.value = this.filesDone / this.filesToDo * 100
     },
     // アップロード時の処理
     upload: function (file) {
+      this.dropArea.addEventListener('drop', this.handleDrop, false)
+
       const formData = new FormData()
       formData.append('file', file[0])
       formData.append('upload_preset', config.CLD_UPLOAD_PRESET)
       formData.append('tags', 'gs-vue,gs-vue-uploaded')
-      // For debug purpose only
-      // Inspects the content of formData
+
+      // デバッグ用
       for (let pair of formData.entries()) {
         console.log(pair[0] + ', ' + pair[1])
       }
       console.log(this.cldUrl)
-      // Execute api
+      // API通信
       axios.post(this.cldUrl, formData)
         .then(res => { console.log('Success！') })
         .catch(() => { console.error() })
