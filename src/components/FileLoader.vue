@@ -3,12 +3,17 @@
     <h2>Drug & Drop File Uploader</h2>
     <!-- <input type="file" v-on:change="upload($event.target.files)" accept="image/*"> -->
     <div id="drop-area" @dragover.prevent @dragover="hovering = true" @dragleave="hovering = false" :class="{'highlight': hovering}">
-        <form class="my-form">
+        <form class="my-form" ref="fileform">
             <p>Upload multiple files with the file dialog or by dragging and dropping images onto the dashed region</p>
             <input type="file" id="fileElem" v-on:change="upload($event.target.files)" multiple accept="image/*">
             <label class="button" for="fileElem" >Select some files</label>
             <progress id="progress-bar" max=100 value=0></progress>
-            <div id="gallery"></div>
+            <div id="gallery">
+              <div v-for="file in files" :key="file.key" class="flie-listening">
+                <img class="preview" :ref="'preview' + parseInt(file.key)">
+                {{ file.name }}
+              </div>
+            </div>
         </form>
     </div>
   </div>
@@ -16,7 +21,7 @@
 
 <script>
 import config from '../../.cld.json'
-// import axios from 'axios'
+import axios from 'axios'
 
 export default {
   data () {
@@ -36,48 +41,93 @@ export default {
       return `https://api.cloudinary.com/v1_1/${this.cloudinary.cloudName}/image/upload`
     }
   },
-  // mounted () {
-  //   let vm = this
-  //   const dropArea = document.getElementById('drop-area')
-  //   const progressBar = document.getElementById('progress-bar')
-  //   let filesToDo = 0
-  //   let filesDone = 0
+  mounted () {
+    this.dragAndDropCpable = this.determineDragAndDropCapable()
+    console.log(this.dragAndDropCpable)
 
-  //   ;['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
-  //     dropArea.addEventListener(eventName, vm.preventDefaults, false)
-  //   })
-  //   ;['dragenter', 'dragover'].forEach(eventName => {
-  //     dropArea.addEventListener(eventName, vm.highlight, false)
-  //   })
-  //   ;['dragleave', 'drop'].forEach(eventName => {
-  //     dropArea.addEventListener(eventName, vm.unhighlight, false)
-  //   })
-  // },
+    if (this.dragAndDropCpable) {
+      /*
+        fileform内の全てのドラッグイベントのデフォルトイベントを初期化
+      */
+      ['drag', 'dragstart', 'dragover', 'dragenter', 'dragleave', 'drop'].forEach(evt => {
+        this.$refs.fileform.addEventListener(evt, function (e) {
+          e.preventDefault()
+          e.stopPropagation()
+        }, false)
+      })
+      /*
+        fileformにドロップイベントを登録
+      */
+      this.$refs.fileform.addEventListener('drop', function (e) {
+        /*
+          Capture the files from the drop event and add them to our local files
+          array.
+        */
+        for (let i = 0; i < e.dataTransfer.files.length; i++) {
+          this.files.push(e.dataTransfer.files[i])
+          // this.getImagePreviews()
+        }
+        console.table(this.files)
+
+        this.uploadFiles()
+      }.bind(this))
+    }
+  },
   methods: {
-    // DnD可能なブラウザか判定
+    /*
+      DnD可能なブラウザか判定
+    */
     determineDragAndDropCapable () {
       const div = document.createElement('div')
+      // return (('draggable' in div) || ('ondragstart' in div && 'ondrop' in div)) && 'FormData' in window && 'FIleReader' in window
+      return 'draggable' in div || ('ondragstart' in div && 'ondrop' in div)
+    },
+    /*
+      プレビュー
+    */
+    // getImagePreviews () {
+    //   for (let i = 0; i < this.files.length; i++) {
+    //     if (/\.(jpe?g¥png¥gif)$/i.test(this.files[i].name)) {
+    //       let reader = new FileReader()
 
-      return (('draggable' in div) ||
-              ('ondragstart' in div && 'ondrop' in div)) &&
-              'FormData' in window &&
-              'FIleReader' in window
+    //       reader.addEventListener('load', function () {
+    //         this.$refs['preview' + parseInt(i)][0].src = reader.result
+    //       }.bind(this), false)
+
+    //       reader.readAsDataURL(this.files[i])
+    //     } else {
+    //       this.$nextTick(() => {
+    //         this.$refs['preview' + parseInt(i)][0].src = '/images/file.png'
+    //       })
+    //     }
+    //   }
+    // },
+    /*
+      アップロード時の処理
+    */
+    uploadFiles () {
+      // this.dropArea.addEventListener('drop', this.handleDrop, false)
+      this.$refs.fileform.addEventListener('drop', () => {
+        let formData = new FormData()
+
+        for (let i = 0; i < this.files.length; i++) {
+          let file = this.files
+          formData.append('file', file[i])
+          formData.append('upload_preset', config.CLD_UPLOAD_PRESET)
+          formData.append('tags', 'gs-vue,gs-vue-uploaded')
+        }
+
+        // デバッグ用
+        for (let pair of formData.entries()) {
+          console.log(pair[0] + ', ' + pair[1])
+        }
+        console.log(this.cldUrl)
+        // API通信
+        axios.post(this.cldUrl, formData)
+          .then(res => { console.log('Success！') })
+          .catch(() => { console.error() })
+      })
     }
-  //   // デフォルトのイベントをキャンセル
-  //   preventDefaults: function (e) {
-  //     e.preventDefault()
-  //     e.stopPropagation()
-  //   },
-  //   // ドラッグオーバー時のハイライト
-  //   highlight: function (e) {
-  //     console.log('どらっぐおーばー！')
-  //     this.dropArea.classList.add('highlight')
-  //   },
-  //   // ドラッグアウト時はハイライトしない
-  //   unhighlight: function (e) {
-  //     console.log('どらっぐあうと！')
-  //     this.dropArea.classList.remove('highlight')
-  //   },
   //   // ファイルドロップ時の処理
   //   handleDrop: function (e) {
   //     console.log('どろっぷ！')
@@ -113,25 +163,6 @@ export default {
   //     this.filesDone++
   //     this.progressBar.value = this.filesDone / this.filesToDo * 100
   //   },
-  //   // アップロード時の処理
-  //   upload: function (file) {
-  //     this.dropArea.addEventListener('drop', this.handleDrop, false)
-
-  //     const formData = new FormData()
-  //     formData.append('file', file[0])
-  //     formData.append('upload_preset', config.CLD_UPLOAD_PRESET)
-  //     formData.append('tags', 'gs-vue,gs-vue-uploaded')
-
-  //     // デバッグ用
-  //     for (let pair of formData.entries()) {
-  //       console.log(pair[0] + ', ' + pair[1])
-  //     }
-  //     console.log(this.cldUrl)
-  //     // API通信
-  //     axios.post(this.cldUrl, formData)
-  //       .then(res => { console.log('Success！') })
-  //       .catch(() => { console.error() })
-  //   }
   }
 }
 </script>
@@ -176,5 +207,16 @@ p {
 }
 #fileElem {
     display: none;
+}
+
+.file-listing{
+  width: 400px;
+  margin: auto;
+  padding: 10px;
+  border-bottom: 1px solid #ddd;
+}
+
+.file-listing img{
+  height: 100px;
 }
 </style>
