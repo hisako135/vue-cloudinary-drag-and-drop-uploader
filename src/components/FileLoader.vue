@@ -1,22 +1,16 @@
 <template>
   <div>
-    <h2>Drug & Drop File Uploader</h2>
-    <!-- <input type="file" v-on:change="upload($event.target.files)" accept="image/*"> -->
     <div id="drop-area" @dragover.prevent @dragover="hovering = true" @dragleave="hovering = false" :class="{'highlight': hovering}">
         <form class="my-form" ref="fileform">
             <p>Upload multiple files with the file dialog or by dragging and dropping images onto the dashed region</p>
-            <input type="file" id="fileElem" v-on:change="upload($event.target.files)" multiple accept="image/*">
+            <input type="file" id="fileElem" ref="file" v-on:change="submitFiles($event.target.files)" multiple accept="image/*">
             <label class="button" for="fileElem" >Select some files</label>
             <progress id="progress-bar" max=100 value=0></progress>
             <div id="gallery">
-              <div v-for="file in files" :key="file.key" class="flie-listening">
-                <img class="preview" :ref="'preview' + parseInt(file.key)">
-                {{ file.name }}
-              </div>
-              <!-- <div v-for="(file, id) in files" :key="file.key" class="file-listing">
-                  <img class="preview" v-bind:ref="'preview'+parseInt(id)"/>
+              <div v-for="(file, key) in files" :key="key" class="flie-listening">
+                  <img class="preview" v-bind:ref="'preview'+parseInt(key)"/>
                   {{ file.name }}
-              </div> -->
+              </div>
             </div>
         </form>
     </div>
@@ -47,7 +41,6 @@ export default {
   },
   mounted () {
     this.dragAndDropCpable = this.determineDragAndDropCapable()
-    console.log(this.dragAndDropCpable)
 
     if (this.dragAndDropCpable) {
       /*
@@ -68,7 +61,7 @@ export default {
           this.getImagePreviews()
         }
 
-        this.uploadFiles(this.files)
+        this.uploadFiles()
       }.bind(this))
     }
   },
@@ -96,9 +89,9 @@ export default {
 
           reader.readAsDataURL(this.files[i])
         } else {
-          // this.$nextTick(() => {
-          //   this.$refs['preview' + parseInt(i)][0].src = '/images/file.png'
-          // })
+          this.$nextTick(() => {
+            this.$refs['preview' + parseInt(i)][0].src = '/images/file.png'
+          })
           console.log('画像じゃないお')
         }
       }
@@ -107,6 +100,8 @@ export default {
       アップロードしてAPI通信
     */
     uploadFiles () {
+      this.getImagePreviews()
+
       let formData = new FormData()
 
       for (let i = 0; i < this.files.length; i++) {
@@ -166,7 +161,7 @@ export default {
     border-radius: 20px;
     width: 480px;
     font-family: sans-serif;
-    margin: 0 auto;
+    margin: 50px auto;
     padding: 20px;
 }
 #drop-area.highlight {
