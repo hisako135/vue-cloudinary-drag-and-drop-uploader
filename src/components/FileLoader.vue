@@ -3,7 +3,7 @@
     <div id="drop-area" @dragover.prevent @dragover="hovering = true" @dragleave="hovering = false" :class="{'highlight': hovering}">
         <form class="my-form" ref="fileform">
             <p>Upload multiple files with the file dialog or by dragging and dropping images onto the dashed region</p>
-            <input type="file" id="fileElem" ref="file" v-on:change="submitFiles($event.target.files)" multiple accept="image/*">
+            <input type="file" id="fileElem" ref="file" v-on:change="handleInputFiles($event.target.files)" multiple accept="image/*">
             <label class="button" for="fileElem" >Select some files</label>
             <progress id="progress-bar" max=100 value=0></progress>
             <div id="gallery">
@@ -58,8 +58,10 @@ export default {
       this.$refs.fileform.addEventListener('drop', function (e) {
         for (let i = 0; i < e.dataTransfer.files.length; i++) {
           this.files.push(e.dataTransfer.files[i])
+          // this.$set(this.files, e.dataTransfer.files[i])
           this.getImagePreviews()
         }
+        console.log(this.files)
 
         this.uploadFiles()
       }.bind(this))
@@ -72,6 +74,15 @@ export default {
     determineDragAndDropCapable () {
       const div = document.createElement('div')
       return (('draggable' in div) || ('ondragstart' in div && 'ondrop' in div)) && 'FormData' in window && 'FileReader' in window
+    },
+    /*
+      inputデータを処理
+    */
+    handleInputFiles (f) {
+      this.files = f
+      console.log(this.files)
+      this.getImagePreviews()
+      this.uploadFiles()
     },
     /*
       プレビュー
@@ -100,8 +111,6 @@ export default {
       アップロードしてAPI通信
     */
     uploadFiles () {
-      this.getImagePreviews()
-
       let formData = new FormData()
 
       for (let i = 0; i < this.files.length; i++) {
