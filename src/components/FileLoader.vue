@@ -58,10 +58,10 @@ export default {
       this.$refs.fileform.addEventListener('drop', function (e) {
         for (let i = 0; i < e.dataTransfer.files.length; i++) {
           this.files.push(e.dataTransfer.files[i])
-          // this.$set(this.files, e.dataTransfer.files[i])
+          this.$set(this.files, e.dataTransfer.files[i])
+          console.table(this.files)
           this.getImagePreviews()
         }
-        console.log(this.files)
 
         this.uploadFiles()
       }.bind(this))
@@ -80,9 +80,11 @@ export default {
     */
     handleInputFiles (f) {
       this.files = f
-      console.log(this.files)
+      // this.$set(this.files, f)
+      console.table(f)
+      console.table(this.files)
       this.getImagePreviews()
-      this.uploadFiles()
+      // this.uploadFiles()
     },
     /*
       プレビュー
@@ -93,8 +95,6 @@ export default {
           let reader = new FileReader()
 
           reader.addEventListener('load', function () {
-            console.log(this.files[i].name)
-            console.log(this.$refs)
             this.$refs['preview' + parseInt(i)][0].src = reader.result
           }.bind(this), false)
 
