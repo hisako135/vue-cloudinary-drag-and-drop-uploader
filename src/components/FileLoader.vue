@@ -80,11 +80,9 @@ export default {
     */
     handleInputFiles (f) {
       this.files = f
-      // this.$set(this.files, f)
       console.table(f)
       console.table(this.files)
       this.getImagePreviews()
-      // this.uploadFiles()
     },
     /*
       プレビュー
@@ -103,7 +101,6 @@ export default {
           this.$nextTick(() => {
             this.$refs['preview' + parseInt(i)][0].src = '/images/file.png'
           })
-          console.log('画像じゃないお')
         }
       }
     },
@@ -122,44 +119,9 @@ export default {
 
       // API通信
       axios.post(this.cldUrl, formData)
-        .then(res => { console.log('Success！') })
+        .then(res => {})
         .catch(() => { console.error() })
     }
-  //   // ファイルドロップ時の処理
-  //   handleDrop: function (e) {
-  //     console.log('どろっぷ！')
-  //     let dt = e.dataTransfer
-  //     let files = dt.files
-
-  //     this.handleFiles(files)
-  //   },
-  //   // ファイルドロップ後の処理
-  //   handleFiles: function (files) {
-  //     files = [...files]
-  //     this.initializeProgress(files.length)
-  //     files.forEach(this.uploadFile)
-  //     files.forEach(this.previewFile)
-  //   },
-  //   // プレビュー
-  //   previewFile: function (files) {
-  //     let reader = new FileReader()
-  //     reader.readAsDataURL(files)
-  //     reader.onloadend = function () {
-  //       let img = document.createElement('img')
-  //       img.src = reader.result
-  //       document.getElementById('gallery').appendChild(img)
-  //     }
-  //   },
-  //   // プログレスバー
-  //   initializeProgress: function (numfiles) {
-  //     this.progressBar.value = 0
-  //     this.filesDone = 0
-  //     this.filesToDo = numfiles
-  //   },
-  //   progressDone: function () {
-  //     this.filesDone++
-  //     this.progressBar.value = this.filesDone / this.filesToDo * 100
-  //   },
   }
 }
 </script>
