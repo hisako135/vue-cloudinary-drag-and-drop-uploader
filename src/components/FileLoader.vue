@@ -2,9 +2,9 @@
   <div>
     <div id="drop-area" @dragover.prevent @dragover="hovering = true" @dragleave="hovering = false" :class="{'highlight': hovering}">
         <form class="my-form" ref="fileform">
-            <p>Upload multiple files with the file dialog or by dragging and dropping images onto the dashed region</p>
+            <p>ドラッグ&ドロップしてみればいいょ</p>
             <input type="file" id="fileElem" ref="file" v-on:change="handleInputFiles($event.target.files)" multiple accept="image/*">
-            <label class="button" for="fileElem" >Select some files</label>
+            <label class="button" for="fileElem" >ファイルを選択</label>
             <progress id="progress-bar" max=100 value=0></progress>
             <div id="gallery">
               <div v-for="(file, key) in files" :key="key" class="flie-listening">
